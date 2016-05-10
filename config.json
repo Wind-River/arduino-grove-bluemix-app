@@ -1,0 +1,36 @@
+{
+  "_comment": [
+     "config.json: IBM Watson IoT connectivity from VxWorks 7 and an Arduino style API",
+     "Modification History:",
+     "04May16,pty   Initial version"
+     ],
+  "icon": "images/workbench-icon_20x20.png",
+  "name": "IBM Watson IoT",
+  "description":"An example showing end-to-end connectivity with the IBM Watson IoT Platform",
+  "tags": [
+     "vxworks-7"
+  ],
+  "lang": "C",
+  "cmds": {
+     "clone":"prjClone.sh -cfg %config% -prj %dest%"
+  },
+  "doc": "docs/description.md",
+  "visibility": "local",
+  "executable": "bin/%projname%",
+  "type": "application",
+  "key": "vxworks7-arduino-grove-bluemix",
+  "project_data": {
+        "init_clone": 
+        { "fetch": { "scm":"git", "url":"https://github.com/Wind-River/arduino-grove-bluemix-example-2.git", "branch":"master" } },
+        "arduino-lite": 
+        { "fetch": { "scm":"git", "url":"https://github.com/Wind-River/vxworks7-arduino-lite.git", "branch":"master" } },
+        "BluemixClient": 
+        { "fetch": { "scm":"git", "url":"https://github.com/Wind-River/vxworks7-bluemixClient.git", "branch":"master" } },
+        "jansson": 
+        { "fetch": { "scm":"git", "url":"https://github.com/akheron/jansson.git", "sha":"013c389" },
+          "config": { "cmd" : "../application/patches/jansson-vxworks.sh" } },
+		"iotf-embeddedc":
+        { "fetch": { "scm":"git", "url":"https://github.com/ibm-messaging/iotf-embeddedc.git", "sha":"33ab383" },
+          "config": { "cmd" : "../application/patches/iotf-embeddedc-vxworks.sh" } }
+  }  
+}

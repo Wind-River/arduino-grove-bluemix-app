@@ -1,0 +1,351 @@
+From 1cd10f47362cd5dabe08e52f07d82736461a1c9e Mon Sep 17 00:00:00 2001
+From: Paul Tingey <ptingeyuk@gmail.com>
+Date: Tue, 15 Mar 2016 15:00:23 +0000
+Subject: [PATCH 1/2] File changes
+
+---
+ devicemanagementclient.c |  2 +-
+ iotfclient.c             |  2 +-
+ iotfclient.h             | 10 +++++++++-
+ lib/MQTTClient.h         |  2 +-
+ 4 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/devicemanagementclient.c b/devicemanagementclient.c
+index e871fc9..6600a0f 100644
+--- a/devicemanagementclient.c
++++ b/devicemanagementclient.c
+@@ -20,7 +20,7 @@
+ 
+ #include <stdio.h>
+ #include <signal.h>
+-#include <memory.h>
++#include <stdlib.h>
+ #include <time.h>
+ #include "devicemanagementclient.h"
+ 
+diff --git a/iotfclient.c b/iotfclient.c
+index 3d1ea92..3c9f6bb 100644
+--- a/iotfclient.c
++++ b/iotfclient.c
+@@ -18,7 +18,7 @@
+ 
+ #include <stdio.h>
+ #include <signal.h>
+-#include <memory.h>
++#include <stdlib.h>
+ 
+ #include <sys/time.h>
+ #include "iotfclient.h"
+diff --git a/iotfclient.h b/iotfclient.h
+index 140b0a6..4fa7432 100644
+--- a/iotfclient.h
++++ b/iotfclient.h
+@@ -19,7 +19,7 @@
+ #ifndef IOTCLIENT_H_
+ #define IOTCLIENT_H_
+ 
+-#include "MQTTClient.h"
++#include "lib/MQTTClient.h"
+ #include <ctype.h>
+ 
+ // all failure return codes must be negative(extending from mqttclient)
+@@ -53,6 +53,10 @@ typedef struct iotfclient Iotfclient;
+ //Callback used to process commands
+ typedef void (*commandCallback)(char* commandName, char *format, void* payload);
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ /**
+ * Function used to initialize the Watson IoT client
+ * @param client - Reference to the Iotfclient
+@@ -137,4 +141,8 @@ int yield(Iotfclient *client, int time_ms);
+ */
+ int disconnect(Iotfclient *client);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif /* IOTCLIENT_H_ */
+diff --git a/lib/MQTTClient.h b/lib/MQTTClient.h
+index 71da49a..fa58dc3 100644
+--- a/lib/MQTTClient.h
++++ b/lib/MQTTClient.h
+@@ -19,7 +19,7 @@
+ 
+ #include "MQTTPacket.h"
+ #include "stdio.h"
+-#include "MQTTLinux.h" //Platform specific implementation header file
++#include "MQTTVxWorks.h" //Platform specific implementation header file
+ 
+ #define MAX_PACKET_ID 65535
+ #define MAX_MESSAGE_HANDLERS 5
+-- 
+1.9.1
+
+
+From 6aed2777a9350296dde525bd54cd5d25e4cd1059 Mon Sep 17 00:00:00 2001
+From: Paul Tingey <ptingeyuk@gmail.com>
+Date: Tue, 15 Mar 2016 15:03:51 +0000
+Subject: [PATCH 2/2] Added new files
+
+---
+ lib/MQTTVxWorks.c | 165 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/MQTTVxWorks.h |  71 +++++++++++++++++++++++
+ 2 files changed, 236 insertions(+)
+ create mode 100644 lib/MQTTVxWorks.c
+ create mode 100644 lib/MQTTVxWorks.h
+
+diff --git a/lib/MQTTVxWorks.c b/lib/MQTTVxWorks.c
+new file mode 100644
+index 0000000..f00c727
+--- /dev/null
++++ b/lib/MQTTVxWorks.c
+@@ -0,0 +1,165 @@
++/*******************************************************************************
++ * Copyright (c) 2014 IBM Corp.
++ *
++ * All rights reserved. This program and the accompanying materials
++ * are made available under the terms of the Eclipse Public License v1.0
++ * and Eclipse Distribution License v1.0 which accompany this distribution.
++ *
++ * The Eclipse Public License is available at
++ *    http://www.eclipse.org/legal/epl-v10.html
++ * and the Eclipse Distribution License is available at
++ *   http://www.eclipse.org/org/documents/edl-v10.php.
++ *
++ * Contributors:
++ *    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
++ *******************************************************************************/
++
++#include "MQTTVxWorks.h"
++
++char expired(Timer* timer)
++{
++	struct timeval now, res;
++	gettimeofday(&now, NULL);
++	ip_timeval_sub(&timer->end_time, &now, &res);
++	return res.tv_sec < 0 || (res.tv_sec == 0 && res.tv_usec <= 0);
++}
++
++
++void countdown_ms(Timer* timer, unsigned int timeout)
++{
++	struct timeval now;
++	gettimeofday(&now, NULL);
++	struct timeval interval = {timeout / 1000, (timeout % 1000) * 1000};
++	ip_timeval_add(&now, &interval, &timer->end_time);
++}
++
++
++void countdown(Timer* timer, unsigned int timeout)
++{
++	struct timeval now;
++	gettimeofday(&now, NULL);
++	struct timeval interval = {timeout, 0};
++	ip_timeval_add(&now, &interval, &timer->end_time);
++}
++
++
++int left_ms(Timer* timer)
++{
++	struct timeval now, res;
++	gettimeofday(&now, NULL);
++	ip_timeval_sub(&timer->end_time, &now, &res);
++	return (res.tv_sec < 0) ? 0 : res.tv_sec * 1000 + res.tv_usec / 1000;
++}
++
++
++void InitTimer(Timer* timer)
++{
++	timer->end_time = (struct Ip_timeval){0, 0};
++}
++
++
++int vxworks_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
++{
++	struct timeval interval = {timeout_ms / 1000, (timeout_ms % 1000) * 1000};
++	if (interval.tv_sec < 0 || (interval.tv_sec == 0 && interval.tv_usec <= 0))
++	{
++		interval.tv_sec = 0;
++		interval.tv_usec = 100;
++	}
++
++	setsockopt(n->my_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&interval, sizeof(struct timeval));
++
++	int bytes = 0;
++	while (bytes < len)
++	{
++		int rc = recv(n->my_socket, &buffer[bytes], (size_t)(len - bytes), 0);
++		if (rc == -1)
++		{
++			if (errno != ENOTCONN && errno != ECONNRESET)
++			{
++				bytes = -1;
++				break;
++			}
++		}
++		else
++			bytes += rc;
++	}
++	return bytes;
++}
++
++
++int vxworks_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
++{
++	struct timeval tv;
++
++	tv.tv_sec = 0;  /* 30 Secs Timeout */
++	tv.tv_usec = timeout_ms * 1000;  // Not init'ing this can cause strange errors
++
++	setsockopt(n->my_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
++	int	rc = write(n->my_socket, buffer, len);
++	return rc;
++}
++
++
++void vxworks_disconnect(Network* n)
++{
++	close(n->my_socket);
++}
++
++
++void NewNetwork(Network* n)
++{
++	n->my_socket = 0;
++	n->mqttread = vxworks_read;
++	n->mqttwrite = vxworks_write;
++	n->disconnect = vxworks_disconnect;
++}
++
++
++int ConnectNetwork(Network* n, char* addr, int port)
++{
++	int type = SOCK_STREAM;
++	struct sockaddr_in address;
++	int rc = -1;
++	sa_family_t family = AF_INET;
++	struct addrinfo *result = NULL;
++	struct addrinfo hints = {0, AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL};
++
++	if ((rc = getaddrinfo(addr, NULL, &hints, &result)) == 0)
++	{
++		struct addrinfo* res = result;
++
++		/* prefer ip4 addresses */
++		while (res)
++		{
++			if (res->ai_family == AF_INET)
++			{
++				result = res;
++				break;
++			}
++			res = res->ai_next;
++		}
++
++		if (result->ai_family == AF_INET)
++		{
++			address.sin_port = htons(port);
++			address.sin_family = family = AF_INET;
++			address.sin_addr = ((struct sockaddr_in*)(result->ai_addr))->sin_addr;
++		}
++		else
++			rc = -1;
++
++		freeaddrinfo(result);
++	}
++
++	if (rc == 0)
++	{
++		n->my_socket = socket(family, type, 0);
++		if (n->my_socket != -1)
++		{
++			rc = connect(n->my_socket, (struct sockaddr*)&address, sizeof(address));
++		}
++	}
++
++	return rc;
++}
+diff --git a/lib/MQTTVxWorks.h b/lib/MQTTVxWorks.h
+new file mode 100644
+index 0000000..40b78f8
+--- /dev/null
++++ b/lib/MQTTVxWorks.h
+@@ -0,0 +1,71 @@
++/*******************************************************************************
++ * Copyright (c) 2014 IBM Corp.
++ *
++ * All rights reserved. This program and the accompanying materials
++ * are made available under the terms of the Eclipse Public License v1.0
++ * and Eclipse Distribution License v1.0 which accompany this distribution.
++ *
++ * The Eclipse Public License is available at
++ *    http://www.eclipse.org/legal/epl-v10.html
++ * and the Eclipse Distribution License is available at
++ *   http://www.eclipse.org/org/documents/edl-v10.php.
++ *
++ * Contributors:
++ *    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
++ *******************************************************************************/
++
++#ifndef __MQTT_VXWORKS_
++#define __MQTT_VXWORKS_
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <net/socketvar.h>
++#include <sockLib.h>
++#include <ctype.h>
++#include <sys/time.h>
++#include <ipcom_time.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <arpa/inet.h>
++#include <netdb.h>
++#include <stdio.h>
++#include <unistd.h>
++#include <errno.h>
++#include <fcntl.h>
++
++// #include <stdlib.h>
++#include <string.h>
++#include <signal.h>
++
++typedef struct Timer Timer;
++
++/* Ip_timeval struct is same as timeval struct */
++struct Timer {
++	struct Ip_timeval end_time;
++};
++
++typedef struct Network Network;
++
++struct Network
++{
++	int my_socket;
++	int (*mqttread) (Network*, unsigned char*, int, int);
++	int (*mqttwrite) (Network*, unsigned char*, int, int);
++	void (*disconnect) (Network*);
++};
++
++char expired(Timer*);
++void countdown_ms(Timer*, unsigned int);
++void countdown(Timer*, unsigned int);
++int left_ms(Timer*);
++
++void InitTimer(Timer*);
++
++int vxworks_read(Network*, unsigned char*, int, int);
++int vxworks_write(Network*, unsigned char*, int, int);
++void vxworks_disconnect(Network*);
++void NewNetwork(Network*);
++
++int ConnectNetwork(Network*, char*, int);
++
++#endif
+-- 
+1.9.1
+

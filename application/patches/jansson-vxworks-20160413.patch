@@ -1,0 +1,81 @@
+From 5482bc8fee87de491bc88af06884f05d7ea9fa70 Mon Sep 17 00:00:00 2001
+From: ptingey <ptingey@helix-app-cloud>
+Date: Wed, 13 Apr 2016 14:38:16 +0000
+Subject: [PATCH] vxworks-changes
+
+---
+ src/dump.c        | 2 ++
+ src/hashtable.c   | 2 ++
+ src/pack_unpack.c | 2 ++
+ src/utf.c         | 2 ++
+ src/value.c       | 2 ++
+ 5 files changed, 10 insertions(+)
+
+diff --git a/src/dump.c b/src/dump.c
+index 912f955..c14089e 100644
+--- a/src/dump.c
++++ b/src/dump.c
+@@ -5,6 +5,8 @@
+  * it under the terms of the MIT license. See LICENSE for details.
+  */
+ 
++#include <vxWorks.h>
++
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
+ #endif
+diff --git a/src/hashtable.c b/src/hashtable.c
+index a453b00..d68059c 100644
+--- a/src/hashtable.c
++++ b/src/hashtable.c
+@@ -5,6 +5,8 @@
+  * it under the terms of the MIT license. See LICENSE for details.
+  */
+ 
++#include <vxWorks.h>
++
+ #if HAVE_CONFIG_H
+ #include <jansson_private_config.h>
+ #endif
+diff --git a/src/pack_unpack.c b/src/pack_unpack.c
+index f6c700c..f5fb49a 100644
+--- a/src/pack_unpack.c
++++ b/src/pack_unpack.c
+@@ -6,6 +6,8 @@
+  * it under the terms of the MIT license. See LICENSE for details.
+  */
+ 
++#include <vxWorks.h>
++
+ #include <string.h>
+ #include "jansson.h"
+ #include "jansson_private.h"
+diff --git a/src/utf.c b/src/utf.c
+index b56e125..d8c45f6 100644
+--- a/src/utf.c
++++ b/src/utf.c
+@@ -5,6 +5,8 @@
+  * it under the terms of the MIT license. See LICENSE for details.
+  */
+ 
++#include <vxWorks.h>
++
+ #include <string.h>
+ #include "utf.h"
+ 
+diff --git a/src/value.c b/src/value.c
+index 2010605..b395f59 100644
+--- a/src/value.c
++++ b/src/value.c
+@@ -5,6 +5,8 @@
+  * it under the terms of the MIT license. See LICENSE for details.
+  */
+ 
++#include <vxWorks.h>
++
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
+ #endif
+-- 
+1.9.1
+
