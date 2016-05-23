@@ -1,3 +1,5 @@
+#!/bin/bash
+
 /* 
  * Copyright (c) 2016, Wind River Systems, Inc. 
  * 
@@ -26,8 +28,6 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
-
-#!/bin/bash
 
 git apply ../application/patches/iotf-embeddedc-for-vxworks-20160315.patch
 rm -rf samples
