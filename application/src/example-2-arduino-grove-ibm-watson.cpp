@@ -196,6 +196,7 @@ void loop()
     sprintf(tstring, "Input A0 = %d", input);
     lcd.print(tstring, 1);
     /* Calculate temperature from raw data */
+	if (input==0) input=1;
 	resistance = (10230000 - (input * 10000)) / input;
     myData = 1 / ( log(resistance/10000) / B + (1/298.15)) - 273.15;
     /* show temp on console */
