@@ -2,7 +2,7 @@
   "_comment": [
      "config.json: IBM Watson IoT connectivity from VxWorks 7 and an Arduino style API",
      "Modification History:",
-     "04May16,pty   Initial version"
+     "04May16,pty   Initial version",
      "03Jun16,maf   Changes for ga"
      ],
   "icon": "images/workbench-icon_20x20.png",

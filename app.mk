@@ -21,8 +21,8 @@
 # ADDED_LIBS+=-l<libname here>
 EXTRA_DEFINE    += -I$(WIND_PROJECT_ROOT)/jansson/src
 EXTRA_DEFINE    += -I$(WIND_PROJECT_ROOT)/iotf-embeddedc
-EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite
-EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite/libraries/Wire
-EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite/libraries/rgb_lcd
-EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite/libraries/Extras
-EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/BluemixClient/vxWorks
+EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite-lib
+EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite-lib/libraries/Wire
+EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite-lib/libraries/rgb_lcd
+EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/arduino-lite-lib/libraries/Extras
+EXTRA_DEFINE	+= -I$(WIND_PROJECT_ROOT)/bluemix-client-cpp-lib/vxWorks
